@@ -37,6 +37,10 @@ merged_df = pd.merge(merged_df, customers, on='customer_id', how='left')
 merged_df['order_year_month'] = merged_df['order_purchase_timestamp'].dt.to_period('M')
 merged_df['order_month'] = merged_df['order_purchase_timestamp'].dt.month
 merged_df['order_year'] = merged_df['order_purchase_timestamp'].dt.year
+merged_df['year'] = merged_df['order_purchase_timestamp'].dt.year
+merged_df['month'] = merged_df['order_purchase_timestamp'].dt.month
+merged_df['day'] = merged_df['order_purchase_timestamp'].dt.day
+merged_df['day_of_week'] = merged_df['order_purchase_timestamp'].dt.day_name()
 
 monthly_revenue = merged_df.groupby('order_year_month')['payment_value'].sum()
 
@@ -65,3 +69,62 @@ print(monthly_revenue.describe())
 
 print("\n💰 Average Order Value per Month:")
 print(aov.tail(12))
+
+top_customers = merged_df.groupby('customer_id')['price'].sum().sort_values(ascending=False).head(10)
+print("\n💰 Top 10 Customers by Total Spending:")
+print(top_customers)
+
+top_products = merged_df.groupby('product_id')['price'].sum().sort_values(ascending=False).head(10)
+print("\n🏆 Top 10 Products by Total Revenue:")
+print(top_products)
+
+top_categories = merged_df.groupby('product_category_name')['price'].sum().sort_values(ascending=False).head(10)
+print("\n📦 Top 10 Product Categories by Revenue:")
+print(top_categories)
+
+plt.figure(figsize=(10,5))
+top_customers.plot(kind='bar', color='skyblue')
+plt.title("Top 10 Customers by Total Spending")
+plt.xlabel("Customer ID")
+plt.ylabel("Total Spending")
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(10,5))
+top_customers.plot(kind='bar', color='skyblue')
+plt.title("Top 10 Customers by Total Spending")
+plt.xlabel("Customer ID")
+plt.ylabel("Total Spending")
+plt.tight_layout()
+plt.show()
+
+customer_sales = merged_df.groupby('customer_id')['price'].sum().sort_values(ascending=False).reset_index()
+customer_sales['cumulative_sales'] = customer_sales['price'].cumsum()
+customer_sales['cumulative_perc'] = 100 * customer_sales['cumulative_sales'] / customer_sales['price'].sum()
+
+pareto_cutoff_customer = customer_sales[customer_sales['cumulative_perc'] <= 80]
+
+print("\n📊 Pareto Analysis (Customers):")
+print(f"Top {len(pareto_cutoff_customer)} customers (~{len(pareto_cutoff_customer)/len(customer_sales)*100:.1f}"
+      f"%) generate 80% of total revenue.")
+
+product_sales = merged_df.groupby('product_id')['price'].sum().sort_values(ascending=False).reset_index()
+product_sales['cumulative_sales'] = product_sales['price'].cumsum()
+product_sales['cumulative_perc'] = 100 * product_sales['cumulative_sales'] / product_sales['price'].sum()
+
+pareto_cutoff_products = product_sales[product_sales['cumulative_perc'] <= 80]
+
+print("\n📦 Pareto Analysis (Products):")
+print(f"Top {len(pareto_cutoff_products)} products (~{len(pareto_cutoff_products)/len(product_sales)*100:.1f}%) generate 80% of total revenue.")
+
+plt.figure(figsize=(10,5))
+plt.plot(customer_sales['cumulative_perc'], color='blue', label='Cumulative % of Revenue')
+plt.axhline(80, color='red', linestyle='--', label='80% Threshold')
+plt.title('Pareto Analysis - Customer Revenue Distribution')
+plt.xlabel('Customers (sorted by revenue)')
+plt.ylabel('Cumulative % of Total Revenue')
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+
