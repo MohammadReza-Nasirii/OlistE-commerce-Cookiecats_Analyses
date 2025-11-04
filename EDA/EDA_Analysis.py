@@ -128,3 +128,27 @@ plt.tight_layout()
 plt.show()
 
 
+monthly_sales = merged_df.groupby(['year', 'month'])['price'].sum().reset_index()
+
+monthly_sales['year_month'] = pd.to_datetime(monthly_sales[['year', 'month']].assign(day=1))
+
+plt.figure(figsize=(12,6))
+sns.lineplot(x='year_month', y='price', data=monthly_sales, marker='o')
+plt.title('Monthly Sales Trend')
+plt.xlabel('Date')
+plt.ylabel('Total Sales (Revenue)')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+weekly_sales = merged_df.groupby('day_of_week')['price'].sum().reindex(
+    ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+).reset_index()
+
+plt.figure(figsize=(8,5))
+sns.barplot(x='day_of_week', y='price', data=weekly_sales, palette='viridis')
+plt.title('Weekly Sales Distribution')
+plt.xlabel('Day of Week')
+plt.ylabel('Total Sales')
+plt.tight_layout()
+plt.show()
