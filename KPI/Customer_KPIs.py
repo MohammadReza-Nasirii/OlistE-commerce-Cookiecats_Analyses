@@ -6,8 +6,12 @@ matplotlib.use('TkAgg')
 
 orders = pd.read_csv('../Data/raw/olist_orders_dataset.csv')
 customers = pd.read_csv('../Data/raw/olist_customers_dataset.csv')
+order_items = pd.read_csv('../Data/raw/olist_order_items_dataset.csv')
 
+# Merge 1: orders + customers (از ستون customer_id)
 merged_df = pd.merge(orders, customers, on='customer_id', how='left')
+
+merged_df = pd.merge(merged_df, order_items, on='order_id', how='left')
 
 merged_df['order_purchase_timestamp'] = pd.to_datetime(merged_df['order_purchase_timestamp'])
 merged_df['order_approved_at'] = pd.to_datetime(merged_df['order_approved_at'])
@@ -41,3 +45,30 @@ plt.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
 plt.title('Customer Purchase Behavior')
 plt.show()
 
+# CLV
+merged_df['revenue'] = merged_df['price'] + merged_df['freight_value']
+customer_revenue = merged_df.groupby('customer_id').agg({
+    'revenue': 'sum',
+    'order_id': 'nunique'
+}).reset_index()
+
+customer_revenue.rename(columns={'revenue': 'total_spent', 'order_id': 'num_orders'}, inplace=True)
+
+# --- Calculate CLV components ---
+total_customers = customer_revenue['customer_id'].nunique()
+purchase_freq = customer_revenue['num_orders'].sum() / total_customers
+aov = customer_revenue['total_spent'].sum() / customer_revenue['num_orders'].sum()
+lifespan = 1  # assume 1 year
+
+# CLV per customer
+customer_revenue['CLV'] = aov * purchase_freq * lifespan
+
+# Average CLV
+avg_clv = customer_revenue['CLV'].mean()
+
+print(f"Average CLV (Revenue-based): {avg_clv:.2f}")
+
+# Display top 5 customers by revenue-based CLV
+top_customers = customer_revenue.sort_values(by='CLV', ascending=False).head(5)
+print("\nTop 5 High Value Customers (Revenue-based):")
+print(top_customers)
