@@ -218,9 +218,6 @@ corr_matrix = merged_df[numeric_cols].corr()
 print("✅ Correlation Matrix:")
 print(corr_matrix[['price', 'freight_value', 'payment_value']].head())
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 plt.figure(figsize=(10, 6))
 sns.heatmap(
     corr_matrix,
