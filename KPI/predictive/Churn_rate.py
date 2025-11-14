@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 
 # --- Load data (use your merged dataset with customer info) ---
-df = pd.read_csv('../Data/processed/merged_df.csv')
+df = pd.read_csv('../Data/processed/merged.csv')
 
 # --- Feature Engineering ---
 df['order_purchase_timestamp'] = pd.to_datetime(df['order_purchase_timestamp'])
